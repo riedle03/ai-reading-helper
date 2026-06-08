@@ -26,6 +26,20 @@ LIGHT = RGBColor(0xEC, 0xF1, 0xFA)   # 연한 블루 배경
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 FONT  = "맑은 고딕"
 
+# ---------------------------------------------------------------- 학생용 웹앱 주소 (4번 슬라이드)
+WEBAPP_URL = "https://ai-reading-helper-five.vercel.app"
+
+
+def make_qr_png(url, path):
+    """url로 QR PNG를 생성. qrcode 미설치 시 None을 반환해 호출부가 점선 박스로 폴백."""
+    try:
+        import qrcode
+    except ImportError:
+        return None
+    img = qrcode.make(url)
+    img.save(path)
+    return path
+
 # ---------------------------------------------------------------- 캔버스 16:9
 prs = Presentation()
 prs.slide_width  = Inches(13.333)
@@ -199,20 +213,33 @@ def slide_04():
     for txt in ["1) 웹앱 접속 → 2) 글 붙여넣기 → 3) 기능 선택"]:
         para(tf, txt, 21, INK, space_after=0)
 
-    # 오른쪽: QR / 웹앱 주소 placeholder (점선 회색 사각형 + 안내)
-    qr = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(9.2), Inches(2.55),
-                            Inches(3.2), Inches(3.2))
-    qr.fill.solid(); qr.fill.fore_color.rgb = RGBColor(0xF2, 0xF4, 0xF7)
-    qr.line.color.rgb = GRAY; qr.line.width = Pt(1.5)
-    qr.line.dash_style = 2  # 점선
-    qr.shadow.inherit = False
-    tf = qr.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-    para(tf, "[ QR 코드 자리 ]", 18, GRAY, bold=True, align=PP_ALIGN.CENTER, first=True, space_after=6)
-    para(tf, "여기에 웹앱 주소·QR를\n넣어 주세요", 15, GRAY, align=PP_ALIGN.CENTER, space_after=0)
-    # 주소 입력 안내선
-    tf = textbox(s, 9.2, 5.95, 3.2, 0.7)
-    para(tf, "웹앱 주소:", 15, NAVY, bold=True, first=True, space_after=2)
-    para(tf, "____________________", 15, GRAY, space_after=0)
+    # 오른쪽: 실제 QR 코드 + 웹앱 주소
+    qr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "output", "_qr_webapp.png")
+    made = make_qr_png(WEBAPP_URL, qr_path)
+    if made:
+        # QR를 감싸는 흰 카드(테두리) 위에 QR 이미지 얹기
+        card = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(9.2), Inches(2.4),
+                                  Inches(3.2), Inches(3.2))
+        card.fill.solid(); card.fill.fore_color.rgb = WHITE
+        card.line.color.rgb = BLUE; card.line.width = Pt(1.5)
+        card.shadow.inherit = False
+        s.shapes.add_picture(made, Inches(9.45), Inches(2.65), Inches(2.7), Inches(2.7))
+    else:
+        # qrcode 미설치 폴백: 점선 박스 + 안내(주소는 아래에 항상 표시)
+        qr = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(9.2), Inches(2.4),
+                                Inches(3.2), Inches(3.2))
+        qr.fill.solid(); qr.fill.fore_color.rgb = RGBColor(0xF2, 0xF4, 0xF7)
+        qr.line.color.rgb = GRAY; qr.line.width = Pt(1.5)
+        qr.line.dash_style = 2
+        qr.shadow.inherit = False
+        tf = qr.text_frame; tf.word_wrap = True; tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        para(tf, "QR 코드", 18, GRAY, bold=True, align=PP_ALIGN.CENTER, first=True, space_after=6)
+        para(tf, "아래 주소로 접속하세요", 14, GRAY, align=PP_ALIGN.CENTER, space_after=0)
+    # 웹앱 주소(항상 표시) — 휴대폰으로 QR 스캔 또는 주소 직접 입력
+    tf = textbox(s, 9.05, 5.75, 3.5, 1.0, MSO_ANCHOR.TOP)
+    para(tf, "📱 휴대폰으로 QR 찍기", 14, NAVY, bold=True, align=PP_ALIGN.CENTER, first=True, space_after=3)
+    para(tf, WEBAPP_URL.replace("https://", ""), 12, BLUE, bold=True, align=PP_ALIGN.CENTER, space_after=0)
 
 
 # ================================================================ 슬라이드 5: AI 사용 주의점

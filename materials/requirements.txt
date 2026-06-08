@@ -1,3 +1,4 @@
 # 활동지(.docx)·PPT(.pptx) 생성용 파이썬 라이브러리
 python-docx
 python-pptx
+qrcode   # PPT 4번 슬라이드 웹앱 QR 코드 생성 (미설치 시 점선 박스로 폴백)
