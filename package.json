@@ -1,0 +1,16 @@
+{
+  "name": "ai-reading-helper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "디자인 직무 글 읽기를 돕는 AI 독해 도우미 (직업계고 국어×디자인, 2026 AI 징검다리)",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel"
+  },
+  "dependencies": {
+    "openai": "^6.38.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

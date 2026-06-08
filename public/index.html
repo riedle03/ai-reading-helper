@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 독해 도우미</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --ink: #1c2530;
+      --muted: #5b6573;
+      --brand: #2d6cdf;
+      --brand-dark: #1f55b8;
+      --line: #e2e7f0;
+      --mark: #fff2a8;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.7;
+    }
+    header {
+      background: var(--brand);
+      color: #fff;
+      padding: 20px 16px;
+    }
+    header .wrap { max-width: 1100px; margin: 0 auto; }
+    header h1 { margin: 0 0 6px; font-size: 26px; }
+    header p { margin: 0; font-size: 15px; opacity: 0.95; }
+    .notice {
+      max-width: 1100px;
+      margin: 16px auto 0;
+      padding: 12px 16px;
+      background: #fff7e0;
+      border: 1px solid #ffe08a;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #6b5300;
+    }
+    main {
+      max-width: 1100px;
+      margin: 16px auto 60px;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .panel h2 { margin: 0 0 12px; font-size: 19px; }
+    textarea {
+      width: 100%;
+      min-height: 320px;
+      resize: vertical;
+      padding: 14px;
+      font-size: 17px;
+      line-height: 1.7;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: inherit;
+    }
+    .row { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+    button.primary {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 26px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.primary:hover { background: var(--brand-dark); }
+    button.primary:disabled { background: #9db6e6; cursor: not-allowed; }
+    .count { color: var(--muted); font-size: 14px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 17px; color: var(--brand-dark); }
+    .vocab-item { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+    .vocab-item:last-child { border-bottom: none; }
+    .vocab-word { font-weight: 700; }
+    .vocab-mean { color: var(--muted); }
+    .sum-item { padding: 6px 0; }
+    .sum-no {
+      display: inline-block; min-width: 26px; height: 26px; line-height: 26px;
+      text-align: center; background: var(--brand); color: #fff;
+      border-radius: 8px; font-size: 14px; margin-right: 8px;
+    }
+    .kw {
+      display: inline-block; background: #eaf1ff; color: var(--brand-dark);
+      border-radius: 999px; padding: 6px 12px; margin: 0 6px 6px 0; font-size: 15px;
+    }
+    .q-item { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+    .q-item:last-child { border-bottom: none; }
+    .q-text { font-weight: 700; }
+    .q-toggle {
+      margin: 8px 0 0; background: #eef2f8; border: 1px solid var(--line);
+      border-radius: 8px; padding: 6px 12px; font-size: 14px; cursor: pointer;
+    }
+    .q-answer { margin-top: 8px; padding: 10px 12px; background: #f3f8f3; border-radius: 8px; }
+    .q-answer .hint { color: var(--muted); font-size: 15px; margin-top: 6px; }
+    .hidden { display: none; }
+    .state { padding: 14px; border-radius: 12px; text-align: center; }
+    .state.loading { background: #eef4ff; color: var(--brand-dark); }
+    .state.error { background: #ffecec; color: #b3261e; border: 1px solid #f3b6b1; }
+    mark { background: var(--mark); padding: 0 2px; border-radius: 3px; }
+    .placeholder { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>📖 AI 독해 도우미</h1>
+      <p>디자인 직무 글을 붙여넣고 [분석하기]를 누르면 어휘·요약·핵심어·점검 질문을 만들어 줘요.</p>
+    </div>
+  </header>
+
+  <div class="notice">
+    ⚠️ 이름·연락처 같은 개인정보는 넣지 마세요. AI 답은 틀릴 수 있으니 꼭 원문과 비교하세요.
+  </div>
+
+  <main>
+    <!-- 왼쪽: 원문 입력 -->
+    <section class="panel">
+      <h2>① 원문 붙여넣기</h2>
+      <textarea id="input" placeholder="여기에 디자인 직무 관련 글을 붙여넣으세요. (최대 8,000자)"></textarea>
+      <div class="row">
+        <button id="analyzeBtn" class="primary">분석하기</button>
+        <span id="count" class="count">0자</span>
+      </div>
+    </section>
+
+    <!-- 오른쪽: 결과 -->
+    <section class="panel">
+      <h2>② 분석 결과</h2>
+      <div id="result">
+        <p class="placeholder">왼쪽에 글을 넣고 [분석하기]를 눌러 주세요.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const input = document.getElementById("input");
+    const countEl = document.getElementById("count");
+    const btn = document.getElementById("analyzeBtn");
+    const result = document.getElementById("result");
+    const MAX = 8000;
+
+    input.addEventListener("input", () => {
+      const n = input.value.length;
+      countEl.textContent = n.toLocaleString() + "자";
+      countEl.style.color = n > MAX ? "#b3261e" : "";
+    });
+
+    btn.addEventListener("click", analyze);
+
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"]/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    }
+
+    async function analyze() {
+      const text = input.value.trim();
+      if (!text) { showError("분석할 글을 먼저 넣어 주세요."); return; }
+      if (text.length > MAX) { showError(`글이 너무 깁니다. ${MAX.toLocaleString()}자 이내로 줄여 주세요.`); return; }
+
+      btn.disabled = true;
+      result.innerHTML = '<div class="state loading">🔍 분석 중이에요… 잠시만 기다려 주세요.</div>';
+
+      try {
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || "분석에 실패했어요."); return; }
+        render(data, text);
+      } catch (e) {
+        showError("네트워크 오류가 났어요. 인터넷 연결을 확인하고 다시 시도해 주세요.");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function showError(msg) {
+      result.innerHTML = `<div class="state error">⚠️ ${esc(msg)}</div>`;
+    }
+
+    function render(data, text) {
+      const vocab = data.vocab || [];
+      const summaries = data.summaries || [];
+      const keywords = data.keywords || [];
+      const questions = data.questions || [];
+
+      let html = "";
+
+      // ③ 핵심어 (원문 하이라이트용으로 먼저 계산)
+      html += `<div class="card"><h3>🏷️ 핵심어</h3>`;
+      html += keywords.length
+        ? keywords.map((k) => `<span class="kw">${esc(k)}</span>`).join("")
+        : `<span class="placeholder">핵심어가 없어요.</span>`;
+      html += `</div>`;
+
+      // ① 어휘 풀이
+      html += `<div class="card"><h3>📚 어려운 어휘 풀이</h3>`;
+      html += vocab.length
+        ? vocab.map((v) =>
+            `<div class="vocab-item"><span class="vocab-word">${esc(v.word)}</span> — <span class="vocab-mean">${esc(v.meaning)}</span></div>`
+          ).join("")
+        : `<span class="placeholder">어려운 어휘가 없어요.</span>`;
+      html += `</div>`;
+
+      // ② 문단별 요약
+      html += `<div class="card"><h3>✏️ 문단별 요약</h3>`;
+      html += summaries.length
+        ? summaries.map((s) =>
+            `<div class="sum-item"><span class="sum-no">${esc(s.paragraph)}</span>${esc(s.summary)}</div>`
+          ).join("")
+        : `<span class="placeholder">요약할 문단이 없어요.</span>`;
+      html += `</div>`;
+
+      // ④ 이해 점검 질문
+      html += `<div class="card"><h3>❓ 이해 점검 질문</h3>`;
+      html += questions.length
+        ? questions.map((q, i) =>
+            `<div class="q-item">
+               <div class="q-text">Q${i + 1}. ${esc(q.q)}</div>
+               <button class="q-toggle" data-i="${i}">답 보기</button>
+               <div class="q-answer hidden" id="ans-${i}">
+                 <div>✅ ${esc(q.answer)}</div>
+                 ${q.hint ? `<div class="hint">💡 힌트: ${esc(q.hint)}</div>` : ""}
+               </div>
+             </div>`
+          ).join("")
+        : `<span class="placeholder">점검 질문이 없어요.</span>`;
+      html += `</div>`;
+
+      result.innerHTML = html;
+
+      // 답 보기 토글
+      result.querySelectorAll(".q-toggle").forEach((b) => {
+        b.addEventListener("click", () => {
+          const box = document.getElementById("ans-" + b.dataset.i);
+          const open = box.classList.toggle("hidden");
+          b.textContent = open ? "답 보기" : "답 숨기기";
+        });
+      });
+
+      // 원문 textarea 위에 핵심어를 시각적으로 보여주기는 어려우므로,
+      // 핵심어가 글에 실제로 있는지 표시만 핵심어 카드에서 제공(위)했다.
+    }
+  </script>
+</body>
+</html>

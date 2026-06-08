@@ -1,0 +1,3 @@
+# 활동지(.docx)·PPT(.pptx) 생성용 파이썬 라이브러리
+python-docx
+python-pptx

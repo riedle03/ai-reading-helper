@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env*.local
+.vercel/
+materials/output/
+__pycache__/
+*.pyc
+.DS_Store
+
+# 로컬 도구 상태·중간 산출물 (배포·공유 불필요)
+.omc/
+.remember/
+ai-reading-helper.zip
